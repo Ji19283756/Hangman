@@ -1,4 +1,4 @@
-import random
+from random import choice
 
 
 def random_word():
@@ -9,11 +9,11 @@ def random_word():
              'rhetorical', 'coherent', 'murder', 'kaput', 'testy', 'skate', 'brief', 'telling',
              'count', 'carpenter', 'hesitant', 'vigorous', 'saw', 'rose', 'development',
              'curve', 'boat', 'signal', 'flagrant']
-    word = words[random.randint(0, len(words) - 1)]
-    underscore = ""
-    for x in range(len(word)):
-        underscore += "_ "
-    return [x for x in word], underscore, word
+
+    word = choice(words)
+    underscore = "_ " * len(word)
+
+    return list(word), underscore, word
 
 
 def check_guess(letter):
@@ -26,66 +26,67 @@ def check_guess(letter):
         else:
             mistakes += 1
             print_board(mistakes)
-        print((guess_word == actual_word) * ("Yep! " + actual_word + " is the word!") +
-              (guess != actual_word) * ("Nope! That's not the word"))
-        return
+        print(f"Yep! {actual_word} is the word!") if guess_word == actual_word \
+            else print("Nope! That's not the word")
+        return None
     elif len(letter) > 1 and letter != "guess":
         print("Prints only one letter!")
-        return
-    try:
-        int(letter)
+        return None
+    if letter in {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}:
         print("Don't type numbers")
         return None
-    except ValueError:
+    else:
         return letter
 
 
 def print_board(mistakes):
-    printed_word = ""  # this is the word that will be actually printed and is based of print_word
-    for x in print_word:  # iterates thru print word and adds the content to printed_word
-        printed_word += x + ' '
-    printed_guessed_letters = ""  # this is the set of letters that will actaully be printed, based on guessed_letters
-    for x in guessed_letters:  # iterates thru guessed letters and adds the content to printed_word
-        printed_guessed_letters += x + " "
+    # printed_word = ""  # this is the word that will be actually printed and is based of print_word
+    print_worded = "".join(letter + ' ' for letter in print_word)
+
+    # this is the set of letters that will actaully be printed, based on guessed_letters
+    printed_guessed_letters = "".join(letter + " " for letter in guessed_letters)
+
     draw_hangman(mistakes)  # inputs the number of mistakes the user has made and draws the appropriate picture
-    print(printed_word + "\n" + underscore + "\nGuessed letters: " + printed_guessed_letters)
+
     # prints the letters that correspond to the right letters (letters in word)
+    print(f"{print_worded}\n{underscore}\nGuessed letters: {printed_guessed_letters}")
 
 
-def check_guess_with_word(letter):
+def check_guess_with_word(user_letter):
     global right, mistakes, guessed_letters
-    if letter in word:
-        print(letter + " is in the word!")
-        for x in range(len(word)):
-            if word[x] == letter:
-                print_word[x] = letter
+    if user_letter in word:
+        print(f"{user_letter} is in the word!")
+        for x, word_letter in enumerate(word):
+            if user_letter == word_letter:
+                print_word[x] == user_letter
                 right += 1
     else:
-        print(letter + " is not in the word")
+        print(f"{user_letter} is not in the word")
         mistakes += 1
-    guessed_letters += letter
+    guessed_letters += user_letter
     return print_word
 
 
 def draw_hangman(mistakes):
-    hangman = ["   ", "   ", "   "]
-    hangman[0] = (mistakes >= 1) * "( )" + (mistakes == 0) * "   "
-    hangman[1] = (mistakes >= 2 and mistakes < 5) * " | " + (mistakes >= 5 and mistakes < 6) * "/| " + (
-                mistakes >= 6) * "/|\\" + (mistakes < 2) * "   "
-    hangman[2] = (mistakes >= 3 and mistakes < 4) * "/  " + (mistakes >= 4) * "/ \\" + (mistakes < 3) * "   "
+    hangman_body_dict = {0: "   ", 1: "   ", 2: " | ", 3: " | ", 4: " | ", 5: "/| ", 6: "/|\\"}
+    hangman_leg_dict = {0: "   ", 1: "   ", 2: "   ", 3: "/  ", 4: "/ \\", 5: "/ \\", 6: "/ \\"}
+    hangman = ["   "] * 3
+    hangman[0] = "( )" if mistakes >= 1 else "   "
+    hangman[1] = hangman_body_dict[mistakes]
+    hangman[2] = hangman_leg_dict[mistakes]
     print("                    \n"
           "          _____     \n"
           "         |     |    \n"
-          "        " + hangman[0] + "    |    \n"
-                                    "        " + hangman[1] + "    |    \n"
-                                                              "        " + hangman[2] + "    |    \n"
-                                                                                        "              /|\   ")
+          f"        {hangman[0]}    |    \n"
+          f"        {hangman[1]}    |    \n"
+          f"        {hangman[2]}    |    \n"
+          "              /|\   ")
 
 
 # ______________________________________________________________________________________________________________
 guessed_letters = []  # list of the letters that have already been guessed
 word, underscore, actual_word = random_word()  # makes a list of the letters in the word and an undercore that matches
-print_word = [' ' for x in range(len(word))]  # has a list of the word that will be printed
+print_word = [" "] * len(word)  # has a list of the word that will be printed
 # print(word)
 mistakes, right = 0, 0  # counter for the amount of words that are right and the amount of words that are wrong
 print_board(mistakes)
@@ -95,7 +96,8 @@ while mistakes < 6 and not right == len(
     guess = check_guess(guess)  # makes sure that the input is not a number
     if guess in guessed_letters:
         print("you already guessed that letter")
-    elif guess != None and right != len(word):
+    elif guess is not None and right != len(word):
         print_word = check_guess_with_word(guess)  # checks if the letter is in the word
         print_board(mistakes)
-print((mistakes == 6) * ("You Lose\nThe word was " + actual_word) + (right == len(word)) * "You Win!")
+
+print(f"You lose\nThe word was {actual_word}") if mistakes == 6 else print("You win!")
